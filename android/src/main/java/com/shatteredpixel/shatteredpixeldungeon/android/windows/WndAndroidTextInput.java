@@ -22,6 +22,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.android.windows;
 
 import android.app.Activity;
+import android.graphics.Typeface;
 import android.text.InputFilter;
 import android.text.InputType;
 import android.util.TypedValue;
@@ -39,12 +40,12 @@ import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidGraphics;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.android.AndroidGame;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
-import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextMultiline;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
 import com.watabou.noosa.Game;
-import com.watabou.noosa.RenderedText;
 
 //This class makes use of the android EditText component to handle text input
 //FIXME this window is currently android-specific, should generalize it
@@ -83,20 +84,44 @@ public class WndAndroidTextInput extends Window {
 			width = WIDTH;
 		}
 		
+		final RenderedTextBlock txtTitle = PixelScene.renderTextBlock( title, 9 );
+		txtTitle.maxWidth( width );
+		txtTitle.hardlight( Window.TITLE_COLOR );
+		txtTitle.setPos( (width - txtTitle.width()) /2, 2);
+		add(txtTitle);
+		
+		final RedButton positiveBtn = new RedButton( posTxt ) {
+			@Override
+			protected void onClick() {
+				onSelect( true );
+				hide();
+			}
+		};
+		
+		final RedButton negativeBtn;
+		if (negTxt != null) {
+			negativeBtn = new RedButton(negTxt) {
+				@Override
+				protected void onClick() {
+					onSelect(false);
+					hide();
+				}
+			};
+		} else {
+			negativeBtn = null;
+		}
+		
 		((AndroidApplication)Gdx.app).runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
-				RenderedTextMultiline txtTitle = PixelScene.renderMultiline( title, 9 );
-				txtTitle.maxWidth( width );
-				txtTitle.hardlight( Window.TITLE_COLOR );
-				txtTitle.setPos( (width - txtTitle.width()) /2, 0);
-				add(txtTitle);
 
-				float pos = txtTitle.bottom() + MARGIN;
+				float pos = txtTitle.bottom() + 2*MARGIN;
 
 				textInput = new EditText((AndroidApplication)Gdx.app);
 				textInput.setText( initialValue );
-				textInput.setTypeface( RenderedText.getFont() );
+				if (!SPDSettings.systemFont()){
+					textInput.setTypeface( Typeface.createFromAsset(AndroidGame.instance.getAssets(), "pixel_font.ttf") );
+				}
 				textInput.setFilters(new InputFilter[]{new InputFilter.LengthFilter(maxLength)});
 				textInput.setInputType( InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES );
 
@@ -143,13 +168,7 @@ public class WndAndroidTextInput extends Window {
 				//We haven't added the textInput yet, but we can anticipate its height at this point.
 				pos += inputHeight + MARGIN;
 
-				RedButton positiveBtn = new RedButton( posTxt ) {
-					@Override
-					protected void onClick() {
-						onSelect( true );
-						hide();
-					}
-				};
+				
 				if (negTxt != null)
 					positiveBtn.setRect( MARGIN, pos, (width - MARGIN * 3) / 2, BUTTON_HEIGHT );
 				else
@@ -157,13 +176,6 @@ public class WndAndroidTextInput extends Window {
 				add( positiveBtn );
 
 				if (negTxt != null){
-					RedButton negativeBtn = new RedButton( negTxt ) {
-						@Override
-						protected void onClick() {
-							onSelect( false );
-							hide();
-						}
-					};
 					negativeBtn.setRect( positiveBtn.right() + MARGIN, pos, (width - MARGIN * 3) / 2, BUTTON_HEIGHT );
 					add( negativeBtn );
 				}
@@ -173,7 +185,7 @@ public class WndAndroidTextInput extends Window {
 				//The layout of the TextEdit is in display pixel space, not ingame pixel space
 				// resize the window first so we can know the screen-space coordinates for the text input.
 				resize( width, (int)pos );
-				final int inputTop = (int)(camera.cameraToScreen(0, txtTitle.bottom() + MARGIN).y * (Game.dispWidth / (float)Game.width));
+				final int inputTop = (int)(camera.cameraToScreen(0, txtTitle.bottom() + 2*MARGIN).y * (Game.dispWidth / (float)Game.width));
 
 				//The text input exists in a separate view ontop of the normal game view.
 				// It visually appears to be a part of the game window but is infact a separate

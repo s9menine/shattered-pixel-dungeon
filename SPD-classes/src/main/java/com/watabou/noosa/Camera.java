@@ -30,7 +30,7 @@ import java.util.ArrayList;
 
 public class Camera extends Gizmo {
 
-	private static ArrayList<Camera> all = new ArrayList<Camera>();
+	private static ArrayList<Camera> all = new ArrayList<>();
 	
 	protected static float invW2;
 	protected static float invH2;
@@ -173,7 +173,7 @@ public class Camera extends Gizmo {
 			panMove.x = panTarget.x - (scroll.x + width/2f);
 			panMove.y = panTarget.y - (scroll.y + height/2f);
 			
-			panMove.scale(Game.elapsed * panIntensity);
+			panMove.scale(Math.min(1f, Game.elapsed * panIntensity));
 			
 			scroll.offset(panMove);
 		}

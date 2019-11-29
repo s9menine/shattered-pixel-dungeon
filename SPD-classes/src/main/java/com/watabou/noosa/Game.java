@@ -21,6 +21,7 @@
 
 package com.watabou.noosa;
 
+import com.badlogic.gdx.Application;
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.TimeUtils;
@@ -32,6 +33,7 @@ import com.watabou.input.InputHandler;
 import com.watabou.input.KeyEvent;
 import com.watabou.noosa.audio.Music;
 import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Callback;
 import com.watabou.utils.PlatformSupport;
 import com.watabou.utils.Reflection;
 
@@ -104,18 +106,25 @@ public class Game implements ApplicationListener {
 		
 		//refreshes texture and vertex data stored on the gpu
 		TextureCache.reload();
-		RenderedText.reloadCache();
 		Vertexbuffer.refreshAllBuffers();
 	}
 	
 	@Override
 	public void resize(int width, int height) {
-		Gdx.gl.glViewport(0, 0, width, height);
+		Blending.useDefault();
+		TextureCache.reload();
+		Vertexbuffer.refreshAllBuffers();
 		
 		if (height != Game.height || width != Game.width) {
 			
 			Game.width = width;
 			Game.height = height;
+			
+			//TODO might be better to put this in platform support
+			if (Gdx.app.getType() != Application.ApplicationType.Android){
+				Game.dispWidth = Game.width;
+				Game.dispHeight = Game.height;
+			}
 			
 			resetScene();
 		}
@@ -243,6 +252,15 @@ public class Game implements ApplicationListener {
 		tr.printStackTrace(pw);
 		pw.flush();
 		Gdx.app.error("GAME", sw.toString());
+	}
+	
+	public static void runOnRenderThread(Callback c){
+		Gdx.app.postRunnable(new Runnable() {
+			@Override
+			public void run() {
+				c.call();
+			}
+		});
 	}
 	
 	public static void vibrate( int milliseconds ) {

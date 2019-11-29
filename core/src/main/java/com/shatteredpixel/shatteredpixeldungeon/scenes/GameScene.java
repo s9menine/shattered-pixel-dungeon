@@ -99,6 +99,7 @@ import com.shatteredpixel.shatteredpixeldungeon.windows.WndTradeItem;
 import com.watabou.glwrap.Blending;
 import com.watabou.noosa.Camera;
 import com.watabou.noosa.Game;
+import com.watabou.noosa.Gizmo;
 import com.watabou.noosa.Group;
 import com.watabou.noosa.NoosaScript;
 import com.watabou.noosa.NoosaScriptNoLighting;
@@ -465,8 +466,10 @@ public class GameScene extends PixelScene {
 
 			InterlevelScene.mode = InterlevelScene.Mode.NONE;
 
-			fadeIn();
+			
 		}
+		
+		fadeIn();
 
 	}
 	
@@ -519,7 +522,11 @@ public class GameScene extends PixelScene {
 			Actor.process();
 		}
 	};
-
+	
+	//sometimes UI changes can be prompted by the actor thread.
+	// We queue any removed element destruction, rather than destroying them in the actor thread.
+	private ArrayList<Gizmo> toDestroy = new ArrayList<>();
+	
 	@Override
 	public synchronized void update() {
 		if (Dungeon.hero == null || scene == null) {
@@ -536,6 +543,8 @@ public class GameScene extends PixelScene {
 				if (Runtime.getRuntime().availableProcessors() == 1) {
 					actorThread.setPriority(Thread.NORM_PRIORITY - 1);
 				}
+				actorThread.setName("SHPD Actor Thread");
+				Thread.currentThread().setName("SHPD Render Thread");
 				actorThread.start();
 			} else {
 				synchronized (actorThread) {
@@ -570,6 +579,11 @@ public class GameScene extends PixelScene {
 		}
 
 		cellSelector.enable(Dungeon.hero.ready);
+		
+		for (Gizmo g : toDestroy){
+			g.destroy();
+		}
+		toDestroy.clear();
 	}
 
 	private boolean tagAttack    = false;
@@ -584,9 +598,9 @@ public class GameScene extends PixelScene {
 		float tagLeft = SPDSettings.flipTags() ? 0 : uiCamera.width - scene.attack.width();
 
 		if (SPDSettings.flipTags()) {
-			scene.log.setRect(scene.attack.width(), scene.toolbar.top(), uiCamera.width - scene.attack.width(), 0);
+			scene.log.setRect(scene.attack.width(), scene.toolbar.top()-2, uiCamera.width - scene.attack.width(), 0);
 		} else {
-			scene.log.setRect(0, scene.toolbar.top(), uiCamera.width - scene.attack.width(),  0 );
+			scene.log.setRect(0, scene.toolbar.top()-2, uiCamera.width - scene.attack.width(),  0 );
 		}
 
 		float pos = scene.toolbar.top();
@@ -676,7 +690,7 @@ public class GameScene extends PixelScene {
 		
 		if (prompt != null) {
 			prompt.killAndErase();
-			prompt.destroy();
+			toDestroy.add(prompt);
 			prompt = null;
 		}
 		

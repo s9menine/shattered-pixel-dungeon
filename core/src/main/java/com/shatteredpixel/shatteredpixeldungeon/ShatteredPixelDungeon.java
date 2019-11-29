@@ -24,7 +24,6 @@ package com.shatteredpixel.shatteredpixeldungeon;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.WelcomeScene;
 import com.watabou.noosa.Game;
-import com.watabou.noosa.RenderedText;
 import com.watabou.noosa.audio.Music;
 import com.watabou.noosa.audio.Sample;
 import com.watabou.utils.PlatformSupport;
@@ -173,11 +172,6 @@ public class ShatteredPixelDungeon extends Game {
 				Assets.SND_DEGRADE,
 				Assets.SND_MIMIC );
 
-		if (!SPDSettings.systemFont()) {
-			RenderedText.setFont("pixelfont.ttf");
-		} else {
-			RenderedText.setFont( null );
-		}
 		
 	}
 
